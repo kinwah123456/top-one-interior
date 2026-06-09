@@ -1,0 +1,53 @@
+name: Setup Assets and Images
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  setup-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Images Directory
+        run: mkdir -p images
+
+      - name: Download Visual Assets
+        run: |
+          curl -L -o images/hero-bg.jpg "https://tmpfiles.org/dl/wpwsZlqBaabY/hero-bg.jpg"
+          curl -L -o images/portfolio-curtains-1.jpg "https://tmpfiles.org/dl/wewkZBqtaF9X/portfolio-curtains-1.jpg"
+          curl -L -o images/portfolio-interior-1.jpg "https://tmpfiles.org/dl/wswvZoqqaLzJ/portfolio-interior-1.jpg"
+          curl -L -o images/portfolio-curtains-2.jpg "https://tmpfiles.org/dl/wQwlZBqWaNDw/portfolio-curtains-2.jpg"
+          curl -L -o images/portfolio-interior-2.jpg "https://tmpfiles.org/dl/wiwOZGqHah24/portfolio-interior-2.jpg"
+          curl -L -o images/portfolio-commercial-1.jpg "https://tmpfiles.org/dl/wSwyZTq1a442/portfolio-commercial-1.jpg"
+          curl -L -o images/portfolio-curtains-3.jpg "https://tmpfiles.org/dl/w4wmZbqQaxx5/portfolio-curtains-3.jpg"
+
+      - name: Clean up temporary test files
+        run: |
+          rm -f test.txt
+          rm -f test-binary.dat
+
+      - name: Commit and Push Images
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Stage the downloaded images and removal of test files
+          git add images/
+          git rm --cached test.txt test-binary.dat || rm -f test.txt test-binary.dat
+          
+          # Only commit and push if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: download and commit premium visual assets [skip ci]"
+            git push origin main
+          else
+            echo "No changes to commit"
+          fi
